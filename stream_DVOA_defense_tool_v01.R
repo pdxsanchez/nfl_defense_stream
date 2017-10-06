@@ -24,14 +24,27 @@ xData <- getURL(u)
 table = readHTMLTable(xData, stringsAsFactors=F)
 
 df0 <- table[[1]]
-names(df0)[1] <- "DVOA.RANK"
-names(df0)[6] <- "DAVE.RANK"
-df1 <- df0 %>% filter(!is.na(TEAM)) %>%                                         #remove page break
-               filter(TEAM != "TEAM")  %>%
-               mutate_at(vars(DVOA.RANK,DAVE.RANK,PASSRANK,RUSHRANK),           # chr->nums
-                         funs(as.numeric(.)))   %>%
-               mutate_at(vars(`OFFENSEDVOA`,`OFFENSEDAVE`,`PASSOFF`,`RUSHOFF`), #Remove '%'
-                         funs(as.numeric(gsub("\\%", "", .))) )                 #then chr->nums
+#########################################
+## Need this code for latest version of DVOA table...
+df01 <- df0[-1,]
+names(df01)[1]  <- "DVOA.RANK"
+names(df01)[2]  <- "TEAM"
+names(df01)[3]  <- "OFFENSEDVOA"
+names(df01)[4]  <- "LAST.WEEK"
+names(df01)[5]  <- "OFFENSEDAVE"
+names(df01)[6]  <- "DAVE.RANK"
+names(df01)[7]  <- "PASS.OFF"
+names(df01)[8]  <- "PASS.RANK"
+names(df01)[9]  <- "RUSH.OFF"
+names(df01)[10] <- "RUSH.RANK"
+#########################################
+df1 <- df01 %>% filter(!is.na(TEAM)) %>%                                         #remove page break
+                filter(TEAM != "TEAM")  %>%
+                filter(TEAM != "TOTAL") %>%
+                mutate_at(vars(DVOA.RANK,DAVE.RANK,PASS.RANK,RUSH.RANK),           # chr->nums
+                          funs(as.numeric(.)))   %>%
+                mutate_at(vars(`OFFENSEDVOA`,`OFFENSEDAVE`,`PASS.OFF`,`RUSH.OFF`), #Remove '%'
+                          funs(as.numeric(gsub("\\%", "", .))) )                 #then chr->nums
 
 saveRDS(df1,"FO_2017_DVOA_data.rds")
 df2 <- readRDS("FO_2017_DVOA_data.rds")
@@ -76,10 +89,10 @@ m1   <- m0 %>% select(TEAM,WEEK,OFFENSEDVOA) %>%
         spread(WEEK,OFFENSEDVOA)
 m1.5 <- m1 %>% select(TEAM)
 
-m2   <- m1 %>% select(5:8) %>% mutate(sum=rowSums(.))
+m2   <- m1 %>% select(7:10) %>% mutate(sum=rowSums(.))
  
 m2.1 <- m2 %>% select(sum)
-sc4  <- sc1 %>% select(5:8)
+sc4  <- sc1 %>% select(7:10)
 
 m3   <- cbind(m1.5,sc4)
 m4   <- cbind(m3,m2.1)
